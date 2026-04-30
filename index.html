@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guess The Word</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <title>GUESS THE WORD</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
 
@@ -38,7 +43,6 @@
             overflow-x: hidden;
         }
 
-        /* --- ANIMAZIONI --- */
         @keyframes glowPulse {
             0%, 100% { box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
             50% { box-shadow: 0 0 30px rgba(0, 242, 255, 0.5); }
@@ -55,8 +59,7 @@
             to { transform: rotateX(0deg); opacity: 1; }
         }
 
-        /* --- LAYOUT --- */
-        .container { width: 95%; max-width: 1400px; transition: all 0.5s ease; }
+        .container { width: 95%; max-width: 1400px; transition: all 0.5s ease; position: relative; }
         .panel {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -68,8 +71,8 @@
 
         .hidden { display: none !important; }
 
-        /* --- SETUP SCREEN --- */
-        #setup-ui h1 { font-weight: 900; letter-spacing: -2px; color: var(--primary); text-align: center; }
+        /* SETUP SCREEN */
+        h1.title-main { font-weight: 900; letter-spacing: -2px; color: var(--primary); text-align: center; text-transform: uppercase; font-size: 3.5rem; }
         .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; }
         .player-input-row { 
             display: flex; gap: 10px; background: var(--glass); padding: 15px; border-radius: 15px; align-items: center;
@@ -87,7 +90,7 @@
         .btn-primary { background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white; padding: 15px 30px; }
         .btn-primary:hover { transform: scale(1.05); filter: brightness(1.2); }
 
-        /* --- GAME BOARD --- */
+        /* GAME BOARD */
         #game-ui { text-align: center; }
         #turn-announcement { font-size: 1.5rem; color: var(--primary); font-weight: 900; margin-bottom: 10px; }
         
@@ -107,7 +110,7 @@
         }
         .letter.revealed { border-color: var(--primary); background: rgba(0, 242, 255, 0.1); }
 
-        /* --- PLAYERS GRID --- */
+        /* PLAYERS GRID */
         .players-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px; margin-top: 50px;
@@ -123,7 +126,15 @@
         .p-time { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; margin-top: 5px; }
         .p-diff { font-size: 0.7rem; opacity: 0.5; margin-top: 5px; }
 
-        /* --- HOST CONSOLE --- */
+        /* END SCREEN (OVERLAY) */
+        #end-screen {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(2, 4, 10, 0.95); z-index: 200; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 30px; text-align: center;
+        }
+
+        /* HOST CONSOLE */
         .host-controls { 
             position: fixed; bottom: 0; left: 0; right: 0; background: #000; 
             padding: 20px; display: flex; justify-content: center; gap: 20px;
@@ -133,12 +144,14 @@
         .btn-ok { background: var(--success); color: #000; }
         .btn-skip { background: var(--danger); color: #fff; }
 
-        /* Mobile specific */
         @media (max-width: 768px) {
+            h1.title-main { font-size: 2.2rem; }
             .setup-grid { grid-template-columns: 1fr; }
             .letter { width: 40px; height: 55px; font-size: 1.5rem; }
             #definition { font-size: 1.2rem; }
             .players-grid { grid-template-columns: 1fr; }
+            .host-controls { flex-direction: column; padding: 10px; gap: 10px; }
+            #host-solution { text-align: center; margin-right: 0 !important; }
         }
     </style>
 </head>
@@ -146,7 +159,7 @@
 
 <div class="container">
     <div id="setup-ui" class="panel">
-        <h1>ULTIMATE SURVIVAL</h1>
+        <h1 class="title-main">GUESS THE WORD</h1>
         <div style="text-align: center; margin-bottom: 20px;">
             <input type="text" id="room-id" placeholder="Codice Stanza (es. 1234)" style="font-size: 1.5rem; text-align: center; width: 250px;">
         </div>
@@ -156,8 +169,7 @@
                 <label>TEMPO BASE (secondi):</label>
                 <input type="number" id="base-time" value="120" style="width: 80px;">
             </div>
-            <div id="player-list-setup">
-                </div>
+            <div id="player-list-setup"></div>
             <button onclick="addPlayerField()" class="btn-host" style="background:#333; color:white; padding:10px; margin-top:10px;">+ AGGIUNGI GIOCATORE</button>
             <div style="margin-top: 40px; text-align: center;">
                 <button class="btn-primary" onclick="createGame()">CREA E INIZIA PARTITA</button>
@@ -183,6 +195,15 @@
         <div id="definition">"Definizione della parola..."</div>
         <div id="word-display"></div>
         <div class="players-grid" id="players-board"></div>
+        
+        <div id="end-screen" class="hidden">
+            <h1 style="font-size: 3rem; color: #fff;">FINE PARTITA!</h1>
+            <h2 id="winner-name" style="font-size: 4rem; color: var(--primary); margin: 20px 0;"></h2>
+            <div id="end-controls" class="hidden" style="margin-top: 40px; display: flex; gap: 20px;">
+                <button class="btn-primary" onclick="playAgain()">GIOCA ANCORA</button>
+                <button class="btn-skip" style="padding: 15px 30px;" onclick="closeRoom()">CHIUDI STANZA</button>
+            </div>
+        </div>
     </div>
 
     <div id="host-console" class="host-controls hidden">
@@ -194,7 +215,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAXecjrbGuwam5h4Xqn9HrT249h0L3v4n8",
@@ -208,74 +229,92 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- VARIABILI GLOBALI ---
-    let ROLE = ''; // 'host' o 'player'
+    let ROLE = '';
     let ROOM = '';
     let DB_LOCAL = {};
     let GAME_STATE = null;
     let revealInterval = null;
-    let timerInterval = null;
     let audioCtx = null;
 
-    // --- AUDIO SYNTH ---
+    // SINTESI AUDIO
     function playSound(type) {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if(AudioContext) audioCtx = new AudioContext();
+        }
+        if(!audioCtx) return;
+
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         const now = audioCtx.currentTime;
+
         switch(type) {
             case 'tick':
                 osc.frequency.setValueAtTime(600, now);
                 gain.gain.setValueAtTime(0.05, now);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(); osc.stop(now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
                 break;
             case 'reveal':
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(800, now);
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(); osc.stop(now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
                 break;
             case 'correct':
-                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(523.25, now);
                 osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.3);
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                osc.start(); osc.stop(now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
                 break;
             case 'skip':
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(150, now);
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-                osc.start(); osc.stop(now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+                break;
+            case 'win':
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.2);
+                osc.frequency.setValueAtTime(659.25, now + 0.4);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start(now); osc.stop(now + 1.5);
                 break;
         }
     }
 
-    // --- CARICAMENTO JSON ---
+    // CARICAMENTO JSON ANTI-CACHE
     async function fetchDatabase() {
-        const r = await fetch('parole.json');
-        DB_LOCAL = await r.json();
+        try {
+            const timestamp = new Date().getTime();
+            const r = await fetch(`parole.json?v=${timestamp}`, { cache: "no-store" });
+            DB_LOCAL = await r.json();
+        } catch (e) {
+            console.error("Errore caricamento database", e);
+        }
     }
     fetchDatabase();
 
-    // --- UI SWITCHES ---
     window.showHost = () => {
         ROLE = 'host';
         document.getElementById('initial-choice').classList.add('hidden');
         document.getElementById('host-setup').classList.remove('hidden');
-        addPlayerField(); addPlayerField(); // Inizia con 2
+        addPlayerField(); addPlayerField(); 
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     };
 
     window.showPlayer = () => {
         ROLE = 'player';
         document.getElementById('initial-choice').classList.add('hidden');
         document.getElementById('player-waiting').classList.remove('hidden');
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     };
 
     window.addPlayerField = () => {
@@ -287,17 +326,19 @@
                 <option value="database_bambino">Bambino</option>
                 <option value="database_adulto">Adulto</option>
             </select>
-            <input type="number" class="setup-extra" placeholder="+ sec" style="width:60px">
+            <input type="number" class="setup-extra" placeholder="+ sec" style="width:70px">
         `;
         document.getElementById('player-list-setup').appendChild(div);
     };
 
-    // --- CORE LOGIC ---
+    // CORE LOGIC
     window.createGame = async () => {
         ROOM = document.getElementById('room-id').value;
-        if (!ROOM) return alert("Metti un codice stanza!");
+        if (!ROOM) return alert("Inserisci un codice stanza!");
+        
+        await remove(ref(db, 'rooms/' + ROOM)); // Svuota stanza esistente
 
-        const base = parseInt(document.getElementById('base-time').value);
+        const base = parseInt(document.getElementById('base-time').value) || 120;
         const players = [];
         document.querySelectorAll('.player-input-row').forEach(row => {
             const name = row.querySelector('.setup-name').value;
@@ -308,6 +349,7 @@
                     name: name,
                     diff: diff,
                     time: base + extra,
+                    baseTime: base + extra, // Salviamo il tempo originale per "Gioca Ancora"
                     alive: true
                 });
             }
@@ -317,8 +359,7 @@
             status: 'LIVE',
             turn: 0,
             players: players,
-            currentWord: { p: '', d: '', mask: '' },
-            lastAction: 'INIT'
+            currentWord: { p: '', d: '', mask: '' }
         };
 
         await set(ref(db, 'rooms/' + ROOM), initialState);
@@ -328,7 +369,7 @@
 
     window.joinGame = () => {
         ROOM = document.getElementById('room-id').value;
-        if (!ROOM) return alert("Metti un codice stanza!");
+        if (!ROOM) return alert("Inserisci un codice stanza!");
         initSync();
     };
 
@@ -340,13 +381,21 @@
             const oldWord = GAME_STATE?.currentWord?.p;
             GAME_STATE = data;
 
+            document.getElementById('setup-ui').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            
+            if (ROLE === 'host' && data.status === 'LIVE') {
+                document.getElementById('host-console').classList.remove('hidden');
+            } else {
+                document.getElementById('host-console').classList.add('hidden');
+            }
+
             if (data.status === 'LIVE') {
-                document.getElementById('setup-ui').classList.add('hidden');
-                document.getElementById('game-ui').classList.remove('hidden');
-                if (ROLE === 'host') document.getElementById('host-console').classList.remove('hidden');
-                
-                if (oldWord !== data.currentWord.p) playSound('reveal');
+                document.getElementById('end-screen').classList.add('hidden');
+                if (oldWord && oldWord !== data.currentWord.p) playSound('reveal');
                 renderGame();
+            } else if (data.status === 'ENDED') {
+                renderEndGame();
             }
         });
     }
@@ -384,13 +433,11 @@
         }, 800);
     }
 
-    // --- HOST ACTIONS ---
     window.handleAction = (type) => {
-        if (ROLE !== 'host') return;
+        if (ROLE !== 'host' || GAME_STATE.status !== 'LIVE') return;
 
         if (type === 'CORRECT') {
             playSound('correct');
-            // Trova prossimo vivo
             let next = (GAME_STATE.turn + 1) % GAME_STATE.players.length;
             while (!GAME_STATE.players[next].alive) {
                 next = (next + 1) % GAME_STATE.players.length;
@@ -411,12 +458,14 @@
     };
 
     function handleElimination() {
+        playSound('skip');
         GAME_STATE.players[GAME_STATE.turn].alive = false;
         const aliveOnes = GAME_STATE.players.filter(p => p.alive);
         
         if (aliveOnes.length <= 1) {
             GAME_STATE.status = 'ENDED';
-            alert("VINCITORE: " + aliveOnes[0].name);
+            GAME_STATE.winner = aliveOnes.length === 1 ? aliveOnes[0].name : "NESSUNO";
+            playSound('win');
         } else {
             let next = (GAME_STATE.turn + 1) % GAME_STATE.players.length;
             while (!GAME_STATE.players[next].alive) {
@@ -427,7 +476,33 @@
         }
     }
 
-    // --- TIMER MASTER (HOST) ---
+    // GESTIONE FINE PARTITA
+    function renderEndGame() {
+        document.getElementById('end-screen').classList.remove('hidden');
+        document.getElementById('winner-name').innerText = "TRIONFA: " + GAME_STATE.winner;
+        if (ROLE === 'host') {
+            document.getElementById('end-controls').classList.remove('hidden');
+            document.getElementById('host-console').classList.add('hidden');
+        }
+    }
+
+    window.playAgain = () => {
+        GAME_STATE.players.forEach(p => {
+            p.alive = true;
+            p.time = p.baseTime;
+        });
+        GAME_STATE.status = 'LIVE';
+        GAME_STATE.turn = 0;
+        pickNewWord();
+        update(ref(db, 'rooms/' + ROOM), GAME_STATE);
+    };
+
+    window.closeRoom = async () => {
+        await remove(ref(db, 'rooms/' + ROOM));
+        window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+    };
+
+    // TIMER GLOBALE HOST
     setInterval(() => {
         if (ROLE === 'host' && GAME_STATE && GAME_STATE.status === 'LIVE') {
             const p = GAME_STATE.players[GAME_STATE.turn];
@@ -437,11 +512,11 @@
                 handleElimination();
             }
             update(ref(db, 'rooms/' + ROOM + '/players'), GAME_STATE.players);
-            if (p.time < 10) playSound('tick');
+            if (p.time < 10 && p.time > 0) playSound('tick');
         }
     }, 1000);
 
-    // --- RENDERER ---
+    // DISPLAY
     function renderGame() {
         const turnPlayer = GAME_STATE.players[GAME_STATE.turn];
         document.getElementById('turn-announcement').innerText = "TURNO DI: " + turnPlayer.name;
@@ -460,7 +535,7 @@
         board.innerHTML = '';
         GAME_STATE.players.forEach((p, i) => {
             const card = document.createElement('div');
-            card.className = `p-card ${i === GAME_STATE.turn ? 'active' : ''} ${!p.alive ? 'dead' : ''}`;
+            card.className = `p-card ${i === GAME_STATE.turn && p.alive ? 'active' : ''} ${!p.alive ? 'dead' : ''}`;
             card.innerHTML = `
                 <div class="p-name">${p.name}</div>
                 <div class="p-time">${Math.max(0, p.time)}s</div>
